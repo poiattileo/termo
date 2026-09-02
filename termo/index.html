@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gerador - Termo de Retirada de Equipamento | D.E. Jales</title>
+<meta name="description" content="Gerador de Termo de Retirada de Equipamento - Unidade Regional de Ensino Jales. Preencha escola e equipamentos e gere o documento pronto para impressão.">
+<style>
+  :root{
+    --sp-red:#9a1915;
+    --sp-red-dark:#7a1411;
+    --bg:#f3f4f6;
+    --panel:#ffffff;
+    --border:#e5e7eb;
+    --text:#111827;
+    --muted:#6b7280;
+    --primary:#0f3b8c;
+    --primary-hover:#0d336e;
+    --ok:#16a34a;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,sans-serif}
+  /* header top */
+  .topbar{
+    background: linear-gradient(90deg,#0f2a5a 0%,#143a7a 50%,#1a4a9a 100%);
+    color:#fff;
+    padding:10px 18px;
+    display:flex;align-items:center;justify-content:space-between;gap:12px;
+    position:sticky;top:0;z-index:20;
+    box-shadow:0 2px 10px rgba(0,0,0,.18);
+  }
+  .topbar .brand{display:flex;align-items:center;gap:10px;font-weight:700;letter-spacing:.02em}
+  .topbar .brand small{font-weight:500;opacity:.9;display:block;font-size:11px;letter-spacing:.04em;text-transform:uppercase}
+  .topbar .brand .dot{width:9px;height:9px;background:#22c55e;border-radius:50%;box-shadow:0 0 0 6px rgba(34,197,94,.15)}
+  .topbar .actions{display:flex;gap:8px;flex-wrap:wrap}
+  .btn{appearance:none;border:1px solid transparent;padding:10px 14px;border-radius:10px;font-weight:600;font-size:14px;cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:.15s}
+  .btn:active{transform:translateY(1px)}
+  .btn-primary{background:var(--primary);color:#fff;border-color:#0f3b8c}
+  .btn-primary:hover{background:var(--primary-hover)}
+  .btn-ghost{background:#ffffff;color:#0f3b8c;border-color:#dbeafe}
+  .btn-ghost:hover{background:#eff6ff}
+  .btn-dark{background:#111827;color:#fff}
+  .btn-dark:hover{background:#1f2937}
+  .btn-outline{background:#fff;color:#374151;border-color:#d1d5db}
+  .btn-outline:hover{background:#f9fafb}
+  .hint{font-size:12px;color:var(--muted);line-height:1.4}
+  /* layout */
+  .app{
+    display:grid;
+    grid-template-columns: 420px 1fr;
+    min-height:calc(100vh - 58px);
+  }
+  @media(max-width: 1024px){
+    .app{grid-template-columns: 1fr; }
+  }
+  .panel{
+    background:var(--panel);
+    border-right:1px solid var(--border);
+    padding:18px 18px 28px;
+    overflow:auto;
+    position:sticky;top:58px;align-self:start;
+    height:calc(100vh - 58px);
+  }
+  @media(max-width:1024px){
+    .panel{position:static;height:auto;border-right:none;border-bottom:1px solid var(--border)}
+  }
+  .panel h1{font-size:19px;margin:4px 0 4px;display:flex;align-items:center;gap:10px}
+  .panel h1 .icon{width:30px;height:30px;border-radius:8px;background:#eff6ff;color:#1d4ed8;display:grid;place-items:center;font-size:16px}
+  .panel .subtitle{color:var(--muted);font-size:13px;margin:0 0 14px;line-height:1.4}
+  .card{background:#f9fafb;border:1px solid var(--border);border-radius:14px;padding:14px;margin:12px 0}
+  .card h3{margin:0 0 10px;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:#374151;display:flex;align-items:center;gap:8px}
+  .card h3 span{width:22px;height:22px;border-radius:999px;background:#0f3b8c;color:#fff;display:grid;place-items:center;font-size:12px}
+  label{display:block;font-size:12px;font-weight:600;color:#374151;margin:10px 0 6px}
+  label small{font-weight:400;color:var(--muted)}
+  input[type=text], input[type=date], textarea, select{
+    width:100%;padding:11px 12px;border:1px solid #d1d5db;border-radius:10px;background:#fff;font-size:14px;outline:none;transition:.15s;
+  }
+  input:focus, textarea:focus, select:focus{border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.18)}
+  input.upper{ text-transform:uppercase }
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .equip-list{display:flex;flex-direction:column;gap:8px}
+  .equip-row{display:flex;gap:8px;align-items:center}
+  .equip-row input{flex:1}
+  .equip-row .btn-remove{width:38px;height:41px;padding:0;display:grid;place-items:center;border-radius:10px;background:#fff;border:1px solid #e5e7eb;color:#6b7280;cursor:pointer}
+  .equip-row .btn-remove:hover{background:#fef2f2;border-color:#fecaca;color:#dc2626}
+  .equip-row .handle{color:#9ca3af;cursor:grab;font-size:14px}
+  .add-row{display:flex;gap:8px;margin-top:10px}
+  .badge{font-size:11px;background:#fef3c7;color:#92400e;border:1px solid #fde68a;padding:4px 8px;border-radius:999px;font-weight:600}
+  .alert{background:#fffbeb;border:1px solid #fde68a;color:#78350f;padding:10px 12px;border-radius:10px;font-size:12px;line-height:1.5}
+  /* preview area */
+  .preview{
+    padding:22px;
+    display:flex;flex-direction:column;align-items:center;gap:14px;
+    background:
+      radial-gradient(ellipse at top, rgba(15,59,140,.06), transparent 55%),
+      linear-gradient(#f3f4f6, #eef2f7);
+    overflow:auto;
+  }
+  .preview-toolbar{
+    display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:center;
+    position:sticky;top:8px;z-index:5;
+    background:rgba(255,255,255,.9);backdrop-filter:blur(8px);
+    border:1px solid var(--border);padding:8px 10px;border-radius:12px;box-shadow:0 4px 16px rgba(0,0,0,.08);
+  }
+  .preview-toolbar .zoom{display:flex;align-items:center;gap:6px;font-size:12px;color:#374151}
+  .preview-toolbar input[type=range]{width:120px}
+  /* paper */
+  .paper-wrap{
+    transform-origin:top center;
+    transition:.2s;
+  }
+  .paper{
+    width:210mm;
+    min-height:297mm;
+    background:#fff;
+    color:#000;
+    padding: 12mm 18mm 14mm;
+    box-shadow:0 10px 40px rgba(0,0,0,.16), 0 2px 8px rgba(0,0,0,.08);
+    font-family:"Times New Roman", Times, serif;
+    line-height:1.32;
+    position:relative;
+  }
+  /* header inside paper */
+  .paper-header{
+    display:flex;gap:14px;align-items:flex-start;
+    border-bottom:none;
+    margin-bottom:12px;
+  }
+  .paper-header img{width:86px;height:86px;object-fit:contain;flex-shrink:0}
+  .paper-header .h-text{line-height:1.15}
+  .paper-header .h-text .t1{font-family:Arial,Helvetica,sans-serif;font-size:10.5pt;letter-spacing:.02em}
+  .paper-header .h-text .t2{font-family:Arial,Helvetica,sans-serif;font-size:11.2pt;font-weight:800;letter-spacing:.01em;margin-top:1px}
+  .paper-header .h-text .t3{font-family:Arial,Helvetica,sans-serif;font-size:7.8pt;color:#111;margin-top:3px}
+  .paper-header .h-text .t3 a{color:#0f3b8c;text-decoration:underline}
+  .paper .intro{
+    font-size:10.5pt; text-align:justify; margin:18px 0 18px; line-height:1.35;
+  }
+  .paper h2{
+    font-family:"Times New Roman", serif;
+    font-size:13.2pt; font-weight:800; text-align:left; margin:18px 0 2px; letter-spacing:.01em;
+  }
+  .paper h2 + h3{
+    font-size:12.2pt; font-weight:700; margin:0 0 14px;
+  }
+  .paper .body{font-size:10.9pt; text-align:justify}
+  .paper .body p{margin:6px 0}
+  .paper .field-line{
+    display:inline-block; border-bottom:1px solid #000; min-width:160px; padding:0 4px 1px; font-weight:700; vertical-align:baseline;
+  }
+  .paper .field-line.long{min-width:310px}
+  .paper .field-line.xlong{min-width:420px}
+  .paper .field-line.escola{min-width:420px; text-transform:uppercase}
+  .paper .meta{margin:12px 0 6px}
+  .paper .meta b{font-size:11.2pt}
+  .paper .equip-title{font-size:11.2pt;font-weight:800;margin:14px 0 6px}
+  /* table */
+  .paper table{
+    width:100%; border-collapse:collapse; font-size:11pt; margin:0 0 18px;
+  }
+  .paper table th{
+    text-align:center; font-weight:700; font-size:12.2pt; letter-spacing:.02em; text-transform:uppercase;
+    border:1px solid #000; padding:7px 8px; background:#fff;
+  }
+  .paper table td{
+    border:1px solid #000; padding:5.5px 8px; height:22px; font-size:11pt;
+  }
+  .paper table td.empty{height:22px}
+  /* signature */
+  .paper .sig-wrap{margin-top:38px; display:flex; justify-content:flex-start}
+  .paper .sig-box{width:260px; text-align:center}
+  .paper .sig-line{border-top:1px solid #000; padding-top:4px; margin-top:22px; position:relative}
+  .paper .sig-line .x{position:absolute; left:6px; top:-22px; font-size:18pt; font-weight:400; line-height:1}
+  .paper .sig-caption{font-family:Arial, sans-serif; font-size:7.2pt; letter-spacing:.16em; text-transform:uppercase; color:#111; margin-top:2px}
+  .paper .footer-spacer{height:10px}
+  /* print */
+  @media print{
+    html,body{background:#fff}
+    .topbar, .panel, .preview-toolbar, .no-print{display:none !important}
+    .app{display:block}
+    .preview{padding:0;background:#fff;overflow:visible}
+    .paper-wrap{transform:none !important}
+    .paper{box-shadow:none;margin:0;width:auto;min-height:auto;padding:10mm 16mm}
+    @page{ size:A4; margin:10mm }
+  }
+  /* tiny helpers */
+  .muted{color:var(--muted)}
+  .kicker{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#6b7280;font-weight:700}
+  .divider{height:1px;background:var(--border);margin:12px 0}
+  .flex{display:flex;align-items:center;gap:8px}
+  .between{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .pill{font-size:11px;background:#e0f2fe;color:#075985;border:1px solid #bae6fd;padding:4px 8px;border-radius:999px}
+  .live{width:8px;height:8px;background:#22c55e;border-radius:999px;box-shadow:0 0 0 4px rgba(34,197,94,.2);animation:pulse 1.6s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+  details{border:1px solid var(--border);border-radius:10px;background:#fff;padding:10px 12px}
+  details summary{cursor:pointer;font-weight:600;font-size:13px;list-style:none}
+  details summary::-webkit-details-marker{display:none}
+  details[open]{background:#f9fafb}
+</style>
+</head>
+<body>
+
+<div class="topbar no-print">
+  <div class="brand">
+    <div class="dot"></div>
+    <div>
+      <div>D.E. JALES — Termo de Retirada</div>
+      <small>Gerador pronto para impressão • roda 100% no navegador</small>
+    </div>
+  </div>
+  <div class="actions">
+    <button class="btn btn-ghost" onclick="window.scrollTo({top:0,behavior:'smooth'})">✎ Editar</button>
+    <button class="btn btn-dark" onclick="imprimir()">🖨️ Imprimir / PDF</button>
+  </div>
+</div>
+
+<div class="app">
+  <!-- FORM PANEL -->
+  <aside class="panel no-print">
+    <div class="flex" style="justify-content:space-between">
+      <h1><span class="icon">📄</span> Preencher termo</h1>
+      <span class="pill flex"><span class="live"></span> ao vivo</span>
+    </div>
+    <p class="subtitle">Preencha abaixo <b>só o que precisa</b> — o lado direito já mostra exatamente como vai sair na impressora. Ideal para <b>NOME DA ESCOLA</b> e os <b>equipamentos</b>.</p>
+
+    <div class="alert">
+      💡 <b>Dica:</b> deixe os campos em branco se quiser preencher à caneta depois. O documento já vem com linhas para assinatura.
+    </div>
+
+    <div class="card">
+      <h3><span>1</span> Escola e retirada</h3>
+
+      <label for="inEscola">NOME DA ESCOLA <small>— como vai sair em destaque</small></label>
+      <input id="inEscola" type="text" placeholder="Ex: EE JOAQUIM NABUCO - JALES" class="upper" autocomplete="organization">
+
+      <div class="grid2">
+        <div>
+          <label for="inData">Data de retirada</label>
+          <input id="inData" type="date">
+        </div>
+        <div>
+          <label for="inLocal">Local <small>(opcional)</small></label>
+          <input id="inLocal" type="text" value="Jales" placeholder="Jales">
+        </div>
+      </div>
+
+      <div class="hint" style="margin-top:8px">A data sai no formato <b>DD/MM/AAAA</b> no papel. Se deixar vazia, fica uma linha em branco para preencher na hora.</div>
+    </div>
+
+    <div class="card">
+      <h3><span>2</span> Responsável pela retirada</h3>
+      <label for="inResp">Nome completo <small>— depois de “Eu,”</small></label>
+      <input id="inResp" type="text" placeholder="Ex: MARIA DE SOUZA LIMA">
+
+      <label for="inDoc">Documento de identidade <small>— RG / CPF</small></label>
+      <input id="inDoc" type="text" placeholder="Ex: RG 12.345.678-9 SSP/SP">
+    </div>
+
+    <div class="card">
+      <div class="between">
+        <h3 style="margin:0"><span>3</span> Equipamentos</h3>
+        <span class="badge" id="countBadge">3 itens</span>
+      </div>
+      <p class="hint" style="margin:6px 0 10px">Cada linha vira uma linha da tabela <b>DESCRIÇÃO DE CONTEÚDO</b>. Pode apagar, editar e adicionar quantas quiser.</p>
+
+      <div id="equipList" class="equip-list"></div>
+
+      <div class="add-row">
+        <button class="btn btn-outline" style="flex:1" onclick="addEquip('', true)">＋ Adicionar linha</button>
+        <button class="btn btn-outline" onclick="addEquip('1x ', true)" title="Adicionar com quantidade">＋ 1x ___</button>
+      </div>
+
+      <div class="divider"></div>
+      <details>
+        <summary>⚡ Atalhos rápidos</summary>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px">
+          <button class="btn btn-outline" style="font-size:12px;padding:7px 10px" onclick="preset('tablets')">28x Tablets</button>
+          <button class="btn btn-outline" style="font-size:12px;padding:7px 10px" onclick="preset('multi')">2x Notebook Multilaser</button>
+          <button class="btn btn-outline" style="font-size:12px;padding:7px 10px" onclick="preset('positivo')">2x Notebook Positivo</button>
+          <button class="btn btn-outline" style="font-size:12px;padding:7px 10px" onclick="preset('kit')">+ Kit completo</button>
+          <button class="btn btn-outline" style="font-size:12px;padding:7px 10px" onclick="clearEquips()">Limpar tudo</button>
+        </div>
+      </details>
+    </div>
+
+    <div class="card" style="background:#ffffff">
+      <h3><span>✓</span> Gerar</h3>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <button class="btn btn-primary" style="justify-content:center" onclick="imprimir()">🖨️ Imprimir / Salvar em PDF</button>
+        <div class="grid2">
+          <button class="btn btn-outline" onclick="limparTudo()">♻️ Limpar formulário</button>
+          <button class="btn btn-outline" onclick="salvarRascunho()">💾 Salvar rascunho</button>
+        </div>
+        <div class="hint">No diálogo de impressão escolha <b>“Salvar como PDF”</b>. Use <b>Margens: Nenhuma</b> ou <b>Padrão</b> e desmarque “Cabeçalhos e rodapés” para ficar idêntico ao modelo.</div>
+      </div>
+    </div>
+
+    <div class="hint" style="margin:10px 2px">
+      📁 Para sua VM: este gerador ficará em <code>/var/www/html/termo/</code> e <b>não apaga</b> seu site de ramais em <code>/var/www/html/</code>. Acesse por <code>http://IP-DO-SERVIDOR/termo/</code>.
+    </div>
+  </aside>
+
+  <!-- PREVIEW -->
+  <main class="preview">
+    <div class="preview-toolbar no-print">
+      <div class="zoom">
+        <span>🔍</span>
+        <label style="margin:0;font-weight:600;font-size:12px">Zoom</label>
+        <input id="zoom" type="range" min="55" max="115" value="92">
+        <span id="zoomLabel" style="font-variant-numeric:tabular-nums;min-width:36px">92%</span>
+      </div>
+      <div style="width:1px;height:22px;background:var(--border)"></div>
+      <button class="btn btn-dark" style="padding:8px 12px" onclick="imprimir()">🖨️ Imprimir</button>
+      <button class="btn btn-outline" style="padding:8px 12px" onclick="window.scrollTo({top:0,behavior:'smooth'})">⬆️ Editar</button>
+    </div>
+
+    <div class="paper-wrap" id="paperWrap">
+      <div class="paper" id="paper">
+        <!-- header -->
+        <div class="paper-header">
+          <img id="brasao" alt="Brasão SP" src="">
+          <div class="h-text">
+            <div class="t1">SECRETARIA DE ESTADO DA EDUCAÇÃO</div>
+            <div class="t2">UNIDADE REGIONAL DE ENSINO – REGIÃO DE JALES</div>
+            <div class="t3">Rua Oito, n.º 2315 - Centro - CEP: 15.700-066 - Jales - SP - Fone (17) 3622-0000<br>
+              Site: <a href="http://dejales.educacao.sp.gov.br" target="_blank">http://dejales.educacao.sp.gov.br</a>&nbsp;&nbsp; E-mail: <a href="mailto:jal@educacao.sp.gov.br">jal@educacao.sp.gov.br</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="intro">
+          A Unidade Regional de Ensino – Região de Jales declara que o(s) equipamento(s) abaixo mencionado(s) foi(ram) retirado(s) pelo responsável identificado abaixo. O responsável está ciente de que retirou exatamente o(s) equipamento(s) que foi(ram) apresentado(s) ao suporte técnico, conforme verificado no momento da retirada."
+        </div>
+
+        <h2>UNIDADE REGIONAL DE ENSINO - REGIÃO DE JALES</h2>
+        <h3>Termo de Retirada de Equipamento</h3>
+
+        <div class="body">
+          <p>
+            <b>Eu,</b> <span class="field-line long" id="prevResp">_________________________________________________</span> portador(a) do<br>
+            documento de identidade, <span class="field-line long" id="prevDocLine">_____________________________________</span>
+          </p>
+          <p>
+            em cumprimento às normas e procedimentos da <b>Unidade Regional de Ensino – Região de JALES</b>
+          </p>
+          <p>
+            declaro para os devidos fins que realizei a retirada do(s) equipamento(s) descrito(s) abaixo: &nbsp;
+            <span id="prevDataInline" style="letter-spacing:.08em">__/__/____</span>
+          </p>
+
+          <div class="meta">
+            <div><b>Data de Retirada:</b> <span class="field-line" id="prevData" style="min-width:170px">___/___/______</span></div>
+            <div style="margin-top:6px"><b>Escola:</b> <span class="field-line xlong escola" id="prevEscola" style="font-weight:800">NOME DA ESCOLA</span></div>
+          </div>
+
+          <div class="equip-title">Equipamento(s) Retirado(s):</div>
+
+          <table aria-label="Equipamentos">
+            <thead>
+              <tr><th>DESCRIÇÃO DE CONTEÚDO</th></tr>
+            </thead>
+            <tbody id="prevBody">
+              <!-- rows injected -->
+            </tbody>
+          </table>
+
+          <div class="sig-wrap">
+            <div class="sig-box">
+              <div class="sig-line"><span class="x">X</span></div>
+              <div class="sig-caption">Assinatura do Responsável pela Retirada</div>
+            </div>
+          </div>
+
+          <div class="footer-spacer"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hint no-print" style="max-width:780px;text-align:center">
+      Pré-visualização fiel ao <b>modelo.doc</b> original. Ao imprimir, use <b>A4 retrato</b>. O papel acima já está no tamanho certo.
+    </div>
+  </main>
+</div>
+
+<script>
+/* brasao base64 */
+const BRASAO_B64 = "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";
+document.getElementById('brasao').src = "data:image/png;base64,"+BRASAO_B64;
+
+/* state */
+const $ = s => document.querySelector(s);
+const inEscola = $('#inEscola');
+const inResp = $('#inResp');
+const inDoc = $('#inDoc');
+const inData = $('#inData');
+const inLocal = $('#inLocal');
+const equipList = $('#equipList');
+const prevEscola = $('#prevEscola');
+const prevResp = $('#prevResp');
+const prevDocLine = $('#prevDocLine');
+const prevData = $('#prevData');
+const prevDataInline = $('#prevDataInline');
+const prevBody = $('#prevBody');
+const countBadge = $('#countBadge');
+const zoom = $('#zoom');
+const zoomLabel = $('#zoomLabel');
+const paperWrap = $('#paperWrap');
+
+let equips = [
+  "28x Tablets",
+  "2x Notebook Multilaser",
+  "2x Notebook Positivo"
+];
+
+function load(){
+  try{
+    const raw = localStorage.getItem('termo_jales_v2');
+    if(raw){
+      const j = JSON.parse(raw);
+      if(j.escola) inEscola.value = j.escola;
+      if(j.resp) inResp.value = j.resp;
+      if(j.doc) inDoc.value = j.doc;
+      if(j.data) inData.value = j.data;
+      if(j.local) inLocal.value = j.local;
+      if(Array.isArray(j.equips) && j.equips.length) equips = j.equips;
+    } else {
+      // default from old key
+      const oldeq = localStorage.getItem('termo_jales_equips');
+      if(oldeq) equips = JSON.parse(oldeq);
+    }
+  }catch(e){}
+  if(!inData.value){
+    const now = new Date();
+    // não preenche automaticamente para não forçar data errada, deixa usuário escolher
+  }
+}
+
+function save(){
+  const data = {
+    escola: inEscola.value,
+    resp: inResp.value,
+    doc: inDoc.value,
+    data: inData.value,
+    local: inLocal.value,
+    equips: equips
+  };
+  localStorage.setItem('termo_jales_v2', JSON.stringify(data));
+}
+
+function formatDate(iso){
+  if(!iso) return "";
+  const [y,m,d] = iso.split("-");
+  return `${d}/${m}/${y}`;
+}
+
+function renderEquips(){
+  // form
+  equipList.innerHTML = "";
+  equips.forEach((val, i)=>{
+    const row = document.createElement('div');
+    row.className = "equip-row";
+    row.innerHTML = `
+      <span class="handle" title="arrastar">⋮⋮</span>
+      <input type="text" placeholder="Ex: 10x Tablet Samsung" value="${escapeHtml(val)}" data-i="${i}" aria-label="Equipamento ${i+1}">
+      <button class="btn-remove" title="Remover" aria-label="Remover linha ${i+1}" onclick="removeEquip(${i})">✕</button>
+    `;
+    equipList.appendChild(row);
+  });
+  // events
+  equipList.querySelectorAll('input').forEach(inp=>{
+    inp.addEventListener('input', e=>{
+      const idx = parseInt(e.target.dataset.i,10);
+      equips[idx] = e.target.value;
+      countBadge.textContent = equips.filter(s=>s.trim()).length + " itens";
+      renderPreview();
+      save();
+    });
+  });
+  countBadge.textContent = equips.filter(s=>s.trim()).length + " itens";
+
+  renderPreview();
+}
+
+function renderPreview(){
+  // escola
+  const escola = inEscola.value.trim();
+  if(escola){
+    prevEscola.textContent = escola.toUpperCase();
+    prevEscola.style.borderBottom = "1px solid #000";
+    prevEscola.style.paddingBottom = "1px";
+  } else {
+    prevEscola.textContent = "NOME DA ESCOLA";
+    prevEscola.style.opacity = ".95";
+  }
+  // resp
+  const resp = inResp.value.trim();
+  if(resp){
+    prevResp.textContent = resp;
+    prevResp.style.borderBottom = "1px solid #000";
+  } else {
+    prevResp.textContent = "_________________________________________________";
+    prevResp.style.borderBottom = "none";
+  }
+  const doc = inDoc.value.trim();
+  if(doc){
+    prevDocLine.textContent = doc;
+    prevDocLine.style.borderBottom = "1px solid #000";
+  } else {
+    prevDocLine.textContent = "_____________________________________";
+    prevDocLine.style.borderBottom = "none";
+  }
+  // data
+  const f = formatDate(inData.value);
+  if(f){
+    prevData.textContent = f;
+    prevData.style.borderBottom = "1px solid #000";
+    prevDataInline.textContent = f;
+    prevDataInline.style.borderBottom = "1px solid #000";
+    prevDataInline.style.padding = "0 4px";
+  } else {
+    prevData.textContent = "___/___/______";
+    prevData.style.borderBottom = "1px solid #000";
+    prevDataInline.textContent = "__/__/____";
+    prevDataInline.style.borderBottom = "none";
+    prevDataInline.style.padding = "0";
+  }
+
+  // table - keep at least 7 rows (like original 6 + header) to preserve layout when printing
+  const minRows = 7;
+  const rows = [...equips];
+  // remove trailing empties for count but keep for display? keep all that user left
+  // pad
+  while(rows.length < minRows) rows.push("");
+  // if more than minRows, show all
+  prevBody.innerHTML = "";
+  rows.forEach(val=>{
+    const tr = document.createElement('tr');
+    const td = document.createElement('td');
+    td.textContent = val || "";
+    if(!val) td.classList.add('empty');
+    // empty cells still keep border height
+    td.innerHTML = val ? escapeHtml(val) : "&nbsp;";
+    tr.appendChild(td);
+    prevBody.appendChild(tr);
+  });
+}
+
+function escapeHtml(s){
+  return s.replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+// actions
+function addEquip(val="", focus=true){
+  equips.push(val);
+  renderEquips();
+  save();
+  if(focus){
+    const inputs = equipList.querySelectorAll('input');
+    inputs[inputs.length-1]?.focus();
+  }
+}
+function removeEquip(i){
+  equips.splice(i,1);
+  if(equips.length===0) equips.push("");
+  renderEquips();
+  save();
+}
+function preset(which){
+  if(which==='tablets'){ addEquip('28x Tablets'); }
+  else if(which==='multi'){ addEquip('2x Notebook Multilaser'); }
+  else if(which==='positivo'){ addEquip('2x Notebook Positivo'); }
+  else if(which==='kit'){
+    equips = ["28x Tablets","2x Notebook Multilaser","2x Notebook Positivo","1x Carregador","1x Cabo HDMI"];
+    renderEquips(); save();
+  }
+}
+function clearEquips(){
+  equips = [""];
+  renderEquips(); save();
+}
+function limparTudo(){
+  if(!confirm('Limpar todo o formulário?')) return;
+  inEscola.value=""; inResp.value=""; inDoc.value=""; inData.value=""; // keep local
+  equips = ["28x Tablets","2x Notebook Multilaser","2x Notebook Positivo"];
+  renderEquips(); renderPreview(); save();
+  inEscola.focus();
+}
+function salvarRascunho(){
+  save();
+  const btn = document.activeElement;
+  // simple feedback
+  const old = btn?.textContent;
+  if(btn) { btn.textContent="✓ Salvo!"; setTimeout(()=>btn.textContent=old,1400); }
+  else alert('Rascunho salvo no navegador!');
+}
+function imprimir(){
+  save();
+  window.print();
+}
+
+// listeners
+[inEscola, inResp, inDoc, inLocal].forEach(el=> el.addEventListener('input', ()=>{ renderPreview(); save(); }));
+inData.addEventListener('change', ()=>{ renderPreview(); save(); });
+inEscola.addEventListener('input', e=>{ /* keep uppercase visual only in preview */ });
+
+zoom.addEventListener('input', ()=>{
+  const v = parseInt(zoom.value,10);
+  zoomLabel.textContent = v+"%";
+  paperWrap.style.transform = `scale(${v/100})`;
+});
+/* init */
+load();
+renderEquips();
+renderPreview();
+// zoom init
+paperWrap.style.transform = `scale(${parseInt(zoom.value,10)/100})`;
+
+// keyboard: Ctrl+P already prints
+document.addEventListener('keydown', e=>{
+  if(e.ctrlKey && e.key.toLowerCase()==='p'){ /* let native */ }
+});
+
+// expose to global for inline onclick
+window.addEquip = addEquip;
+window.removeEquip = removeEquip;
+window.preset = preset;
+window.clearEquips = clearEquips;
+window.limparTudo = limparTudo;
+window.salvarRascunho = salvarRascunho;
+window.imprimir = imprimir;
+</script>
+</body>
+</html>
