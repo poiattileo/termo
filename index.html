@@ -122,11 +122,13 @@
     min-height:297mm;
     background:#fff;
     color:#000;
-    padding: 12mm 18mm 14mm;
+    padding: 16mm 18mm 16mm;
     box-shadow:0 10px 40px rgba(0,0,0,.16), 0 2px 8px rgba(0,0,0,.08);
     font-family:"Times New Roman", Times, serif;
     line-height:1.32;
     position:relative;
+    display:flex;
+    flex-direction:column;
   }
   /* header inside paper */
   .paper-header{
@@ -150,7 +152,7 @@
   .paper h2 + h3{
     font-size:12.2pt; font-weight:700; margin:0 0 14px;
   }
-  .paper .body{font-size:10.9pt; text-align:justify}
+  .paper .body{font-size:10.9pt; text-align:justify; flex:1; display:flex; flex-direction:column}
   .paper .body p{margin:6px 0}
   .paper .field-line{
     display:inline-block; border-bottom:1px solid #000; min-width:160px; padding:0 4px 1px; font-weight:700; vertical-align:baseline;
@@ -170,24 +172,24 @@
     border:1px solid #000; padding:7px 8px; background:#fff;
   }
   .paper table td{
-    border:1px solid #000; padding:5.5px 8px; height:22px; font-size:11pt;
+    border:1px solid #000; padding:7px 8px; height:28px; font-size:11pt;
   }
-  .paper table td.empty{height:22px}
-  /* signature */
-  .paper .sig-wrap{margin-top:38px; display:flex; justify-content:flex-start}
+  .paper table td.empty{height:28px}
+  /* signature - empurrada pro final da folha pra preencher A4 */
+  .paper .sig-wrap{margin-top:auto; padding-top:42px; display:flex; justify-content:flex-start}
   .paper .sig-box{width:260px; text-align:center}
   .paper .sig-line{border-top:1px solid #000; padding-top:4px; margin-top:22px; position:relative}
   .paper .sig-line .x{position:absolute; left:6px; top:-22px; font-size:18pt; font-weight:400; line-height:1}
   .paper .sig-caption{font-family:Arial, sans-serif; font-size:7.2pt; letter-spacing:.16em; text-transform:uppercase; color:#111; margin-top:2px}
   .paper .footer-spacer{height:10px}
-  /* print */
+  /* print - ajustado pra preencher A4 */
   @media print{
     html,body{background:#fff}
     .topbar, .panel, .preview-toolbar, .no-print{display:none !important}
     .app{display:block}
     .preview{padding:0;background:#fff;overflow:visible}
     .paper-wrap{transform:none !important}
-    .paper{box-shadow:none;margin:0;width:auto;min-height:auto;padding:10mm 16mm}
+    .paper{box-shadow:none;margin:0;width:auto;min-height:277mm;padding:14mm 16mm 14mm;display:flex;flex-direction:column}
     @page{ size:A4; margin:10mm }
   }
   /* tiny helpers */
@@ -217,7 +219,7 @@
   </div>
   <div class="actions">
     <button class="btn btn-ghost" onclick="window.scrollTo({top:0,behavior:'smooth'})">✎ Editar</button>
-    <button class="btn btn-dark" id="btnHpTop" onclick="imprimirHP()">🖨️ Imprimir HP_PeB 600dpi</button>
+    <button class="btn btn-dark" id="btnHpTop" onclick="imprimirHP()">🖨️ Imprimir</button>
     <button class="btn btn-outline" style="background:#fff;color:#111827" onclick="imprimirPDF()" title="Impressão local / Salvar em PDF">📄 PDF</button>
   </div>
 </div>
@@ -277,7 +279,7 @@
     <div class="card" style="background:#ffffff">
       <h3><span>✓</span> Gerar</h3>
       <div style="display:flex;flex-direction:column;gap:8px">
-        <button class="btn btn-primary" id="btnHpMain" style="justify-content:center" onclick="imprimirHP()">🖨️ Imprimir direto na HP_PeB — 600dpi</button>
+        <button class="btn btn-primary" id="btnHpMain" style="justify-content:center" onclick="imprimirHP()">🖨️ Imprimir</button>
         <button class="btn btn-outline" style="justify-content:center" onclick="imprimirPDF()">📄 Imprimir / Salvar em PDF (local)</button>
         <div class="grid2">
           <button class="btn btn-outline" onclick="limparTudo()">♻️ Limpar formulário</button>
@@ -302,7 +304,7 @@
         <span id="zoomLabel" style="font-variant-numeric:tabular-nums;min-width:36px">92%</span>
       </div>
       <div style="width:1px;height:22px;background:var(--border)"></div>
-      <button class="btn btn-dark" style="padding:8px 12px" id="btnHpPreview" onclick="imprimirHP()">🖨️ HP_PeB 600dpi</button>
+      <button class="btn btn-dark" style="padding:8px 12px" id="btnHpPreview" onclick="imprimirHP()">🖨️ Imprimir</button>
       <button class="btn btn-outline" style="padding:8px 12px" onclick="imprimirPDF()">📄 PDF</button>
       <button class="btn btn-outline" style="padding:8px 12px" onclick="window.scrollTo({top:0,behavior:'smooth'})">⬆️ Editar</button>
     </div>
@@ -706,7 +708,7 @@ async function imprimirHP(){
     const fullHtml = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><style>${styleContent}
       @page{size:A4;margin:10mm}
       html,body{background:#fff;margin:0;padding:0}
-      .paper{box-shadow:none;margin:0 auto}
+      .paper{box-shadow:none;margin:0 auto;min-height:277mm}
     </style></head><body>${paperHTML}</body></html>`;
     const endpoints = ['print.php','./print.php','termo/print.php','/termo/print.php'];
     let lastErr=null, resp=null;
