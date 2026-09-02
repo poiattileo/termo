@@ -334,8 +334,7 @@
             em cumprimento às normas e procedimentos da <b>Unidade Regional de Ensino – Região de JALES</b>
           </p>
           <p>
-            declaro para os devidos fins que realizei a retirada do(s) equipamento(s) descrito(s) abaixo: &nbsp;
-            <span id="prevDataInline" style="letter-spacing:.08em">__/__/____</span>
+            declaro para os devidos fins que realizei a retirada do(s) equipamento(s) descrito(s) abaixo:
           </p>
 
           <div class="meta">
@@ -527,9 +526,10 @@ function renderPreview(){
   prevDocLine.style.borderBottom = "none";
   prevData.textContent = "___/___/______";
   prevData.style.borderBottom = "1px solid #000";
-  prevDataInline.textContent = "__/__/____";
-  prevDataInline.style.borderBottom = "none";
-  prevDataInline.style.padding = "0";
+  if(prevDataInline){
+    prevDataInline.textContent = "";
+    prevDataInline.style.borderBottom = "none";
+  }
 
   // table - keep at least 7 rows (like original 6 + header) to preserve layout when printing
   const minRows = 7;
