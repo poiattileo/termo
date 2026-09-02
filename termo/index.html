@@ -77,6 +77,13 @@
   }
   input:focus, textarea:focus, select:focus{border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.18)}
   input.upper{ text-transform:uppercase }
+  .escola-wrap{position:relative}
+  .escola-dropdown{position:absolute;left:0;right:0;top:calc(100% + 6px);background:#fff;border:1px solid #d1d5db;border-radius:12px;box-shadow:0 12px 28px rgba(0,0,0,.14);max-height:240px;overflow:auto;display:none;z-index:30}
+  .escola-dropdown.open{display:block}
+  .escola-option{padding:10px 12px;font-size:13.5px;line-height:1.25;cursor:pointer;border-bottom:1px solid #f3f4f6}
+  .escola-option:last-child{border-bottom:none}
+  .escola-option:hover,.escola-option.active{background:#eff6ff}
+  .escola-hint{padding:8px 12px;font-size:11px;color:#6b7280;background:#f9fafb;border-bottom:1px solid #e5e7eb;position:sticky;top:0}
   .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
   .equip-list{display:flex;flex-direction:column;gap:8px}
   .equip-row{display:flex;gap:8px;align-items:center}
@@ -229,8 +236,12 @@
     <div class="card">
       <h3><span>1</span> Escola e retirada</h3>
 
-      <label for="inEscola">NOME DA ESCOLA <small>— como vai sair em destaque</small></label>
-      <input id="inEscola" type="text" placeholder="Ex: EE JOAQUIM NABUCO - JALES" class="upper" autocomplete="organization">
+      <label for="inEscola">NOME DA ESCOLA <small>— digite para buscar</small></label>
+      <div class="escola-wrap">
+        <input id="inEscola" type="text" placeholder="Ex: EE CORIPHEU DE AZEVEDO MARQUES" class="upper" autocomplete="off" aria-autocomplete="list" aria-controls="escolaDropdown" aria-expanded="false">
+        <div id="escolaDropdown" class="escola-dropdown" role="listbox" aria-label="Sugestões de escolas"></div>
+      </div>
+      <div class="hint" style="margin-top:6px">33 escolas da Diretoria de Jales • pode digitar livre se não achar na lista</div>
 
       <div class="grid2">
         <div>
@@ -404,11 +415,49 @@ const countBadge = $('#countBadge');
 const zoom = $('#zoom');
 const zoomLabel = $('#zoomLabel');
 const paperWrap = $('#paperWrap');
+const escolaDropdown = $('#escolaDropdown');
+const escolaWrap = document.querySelector('.escola-wrap');
 
 let equips = [
   "28x Tablets",
   "2x Notebook Multilaser",
   "2x Notebook Positivo"
+];
+
+const ESCOLAS = [
+  "EE \u201CAdelino Bertani\u201D",
+  "EE \u201CAntonio Marin Cruz\u201D",
+  "EE \u201CBaptista Dolci\u201D",
+  "EE \u201CCarlos Celso Lenarduzzi\u201D",
+  "EE \u201CCoripheu de Azevedo Marques\u201D",
+  "EE \u201CCoronel Ernesto Schmidt\u201D",
+  "EE \u201CDom Artur Horsthuis\u201D",
+  "EE \u201CDomingos Donato Rivelli\u201D",
+  "EE \u201CDr. Euphly Jalles\u201D",
+  "EE \u201CFrancisco Molina Molina\u201D",
+  "EE \u201CJos\u00E9 dos Santos\u201D",
+  "EE \u201CJos\u00E9 Nogueira de Souza\u201D",
+  "EE \u201CJos\u00E9 Teixeira do Amaral\u201D",
+  "EE \u201CJo\u00E3o Rodrigues Fernandes\u201D",
+  "EE \u201CJuvenal Giraldelli\u201D",
+  "EE \u201COscar Ant\u00F4nio da Costa\u201D",
+  "EE \u201COrestes Ferreira de Toledo\u201D",
+  "EE \u201CPrefeito Antonio Bezerra de Ara\u00FAjo\u201D",
+  "EE \u201CPrefeito Jos\u00E9 Ribeiro\u201D",
+  "EE \u201CProfessor Akio Satoru\u201D",
+  "EE \u201CProfessor Itael de Mattos\u201D",
+  "EE \u201CRubens de Oliveira Camargo\u201D",
+  "EE de Osvaldo Ramos",
+  "EE Prof\u00AA Maria Pereira de B. Benetoli",
+  "EE \u201CProf. Carlos de Arnaldo Silva\u201D",
+  "EE \u201CProf. Jos\u00E9 Joaquim dos Santos\u201D",
+  "EE \u201CProf\u00AA Elide Apparecida Carlos\u201D",
+  "EE \u201CProf\u00AA Maria das Dores Ferreira Rocha\u201D",
+  "EE \u201CProf\u00AA Maria Pilar Ortega Garcia\u201D",
+  "EE \u201CProf\u00AA On\u00E9lia Faggioni Moreira\u201D",
+  "EE \u201CProf\u00AA Sueli da Silveira Marin Batista\u201D",
+  "EE \u201CProf\u00AA Vanir Ferrero Moraes\u201D",
+  "EE \u201CProf\u00AA Z\u00E9lia de Lourdes Zaccarelli Lopes\u201D"
 ];
 
 function load(){
@@ -547,6 +596,86 @@ function renderPreview(){
 function escapeHtml(s){
   return s.replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 }
+function normalizeEscola(s){
+  return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+}
+let escolaActiveIdx = -1;
+function filteredEscolas(q){
+  const nq = normalizeEscola(q.trim());
+  if(!nq) return ESCOLAS.slice(0,8);
+  return ESCOLAS.filter(e => normalizeEscola(e).includes(nq)).slice(0,8);
+}
+function highlightEscola(text, query){
+  if(!query.trim()) return escapeHtml(text);
+  const nq = normalizeEscola(query);
+  // find indices in normalized to highlight approx
+  // simple: escape and wrap matching substring case-insensitive without accent handling for highlight
+  const idx = normalizeEscola(text).indexOf(nq);
+  if(idx === -1) return escapeHtml(text);
+  // map back to original: approximate by searching case-insensitive in original normalized length
+  // fallback: just return escaped
+  try{
+    const origLower = text.toLowerCase();
+    const qLower = query.toLowerCase();
+    // try direct index
+    let pos = origLower.indexOf(qLower);
+    if(pos === -1) pos = idx; // fallback to normalized idx
+    const before = escapeHtml(text.slice(0, pos));
+    const match = escapeHtml(text.slice(pos, pos + query.length));
+    const after = escapeHtml(text.slice(pos + query.length));
+    if(match) return before + '<strong>' + match + '</strong>' + after;
+  }catch(e){}
+  return escapeHtml(text);
+}
+function renderEscolaDropdown(){
+  const q = inEscola.value;
+  const list = filteredEscolas(q);
+  const total = ESCOLAS.length;
+  if(list.length === 0){
+    escolaDropdown.innerHTML = '<div class="escola-hint">Nenhuma escola encontrada • pressione Enter para usar o texto digitado</div>';
+    escolaDropdown.classList.add('open');
+    inEscola.setAttribute('aria-expanded','true');
+    escolaActiveIdx = -1;
+    return;
+  }
+  let html = '<div class="escola-hint">' + list.length + ' de ' + total + ' escolas • use ↑↓ e Enter</div>';
+  list.forEach((escola, i)=>{
+    const active = i === escolaActiveIdx ? ' active' : '';
+    html += '<div class="escola-option' + active + '" role="option" data-idx="' + i + '" data-value="' + escapeHtml(escola).replace(/"/g,'&quot;') + '">' + highlightEscola(escola, q) + '</div>';
+  });
+  escolaDropdown.innerHTML = html;
+  escolaDropdown.classList.add('open');
+  inEscola.setAttribute('aria-expanded','true');
+  escolaDropdown.querySelectorAll('.escola-option').forEach(el=>{
+    el.addEventListener('mousedown', e=>{
+      e.preventDefault();
+      selectEscola(el.getAttribute('data-value'));
+    });
+  });
+}
+function openEscolaDropdown(){
+  escolaActiveIdx = -1;
+  renderEscolaDropdown();
+}
+function closeEscolaDropdown(){
+  escolaDropdown.classList.remove('open');
+  inEscola.setAttribute('aria-expanded','false');
+  escolaActiveIdx = -1;
+}
+function selectEscola(value){
+  inEscola.value = value;
+  closeEscolaDropdown();
+  renderPreview();
+  save();
+  inEscola.focus();
+}
+function moveEscolaActive(dir){
+  const opts = escolaDropdown.querySelectorAll('.escola-option');
+  if(!opts.length) return;
+  escolaActiveIdx = Math.max(-1, Math.min(opts.length-1, escolaActiveIdx + dir));
+  opts.forEach((o,i)=> o.classList.toggle('active', i===escolaActiveIdx));
+  if(escolaActiveIdx >=0) opts[escolaActiveIdx].scrollIntoView({block:'nearest'});
+}
 
 // actions
 function addEquip(val="", focus=true){
@@ -598,9 +727,40 @@ function imprimir(){
 }
 
 // listeners
-[inEscola, inResp, inDoc, inLocal].forEach(el=> el.addEventListener('input', ()=>{ renderPreview(); save(); }));
+[inResp, inDoc, inLocal].forEach(el=> el.addEventListener('input', ()=>{ renderPreview(); save(); }));
 inData.addEventListener('change', ()=>{ renderPreview(); save(); });
-inEscola.addEventListener('input', e=>{ /* keep uppercase visual only in preview */ });
+// escola with dropdown
+inEscola.addEventListener('input', ()=>{
+  renderPreview(); save();
+  escolaActiveIdx = -1;
+  renderEscolaDropdown();
+});
+inEscola.addEventListener('focus', ()=>{
+  openEscolaDropdown();
+});
+inEscola.addEventListener('keydown', (e)=>{
+  if(!escolaDropdown.classList.contains('open')) return;
+  if(e.key === 'ArrowDown'){ e.preventDefault(); moveEscolaActive(1); }
+  else if(e.key === 'ArrowUp'){ e.preventDefault(); moveEscolaActive(-1); }
+  else if(e.key === 'Enter'){
+    const opts = escolaDropdown.querySelectorAll('.escola-option');
+    if(escolaActiveIdx >=0 && opts[escolaActiveIdx]){
+      e.preventDefault();
+      selectEscola(opts[escolaActiveIdx].getAttribute('data-value'));
+    } else if(opts.length===1){
+      e.preventDefault();
+      selectEscola(opts[0].getAttribute('data-value'));
+    } else {
+      closeEscolaDropdown();
+    }
+  } else if(e.key === 'Escape'){ closeEscolaDropdown(); }
+});
+inEscola.addEventListener('blur', ()=>{
+  setTimeout(()=> closeEscolaDropdown(), 150);
+});
+document.addEventListener('click', (e)=>{
+  if(escolaWrap && !escolaWrap.contains(e.target)) closeEscolaDropdown();
+});
 
 zoom.addEventListener('input', ()=>{
   const v = parseInt(zoom.value,10);
