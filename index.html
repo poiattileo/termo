@@ -217,7 +217,8 @@
   </div>
   <div class="actions">
     <button class="btn btn-ghost" onclick="window.scrollTo({top:0,behavior:'smooth'})">✎ Editar</button>
-    <button class="btn btn-dark" onclick="imprimir()">🖨️ Imprimir / PDF</button>
+    <button class="btn btn-dark" id="btnHpTop" onclick="imprimirHP()">🖨️ Imprimir HP_PeB 600dpi</button>
+    <button class="btn btn-outline" style="background:#fff;color:#111827" onclick="imprimirPDF()" title="Impressão local / Salvar em PDF">📄 PDF</button>
   </div>
 </div>
 
@@ -276,7 +277,8 @@
     <div class="card" style="background:#ffffff">
       <h3><span>✓</span> Gerar</h3>
       <div style="display:flex;flex-direction:column;gap:8px">
-        <button class="btn btn-primary" style="justify-content:center" onclick="imprimir()">🖨️ Imprimir / Salvar em PDF</button>
+        <button class="btn btn-primary" id="btnHpMain" style="justify-content:center" onclick="imprimirHP()">🖨️ Imprimir direto na HP_PeB — 600dpi</button>
+        <button class="btn btn-outline" style="justify-content:center" onclick="imprimirPDF()">📄 Imprimir / Salvar em PDF (local)</button>
         <div class="grid2">
           <button class="btn btn-outline" onclick="limparTudo()">♻️ Limpar formulário</button>
           <button class="btn btn-outline" onclick="salvarRascunho()">💾 Salvar rascunho</button>
@@ -300,7 +302,8 @@
         <span id="zoomLabel" style="font-variant-numeric:tabular-nums;min-width:36px">92%</span>
       </div>
       <div style="width:1px;height:22px;background:var(--border)"></div>
-      <button class="btn btn-dark" style="padding:8px 12px" onclick="imprimir()">🖨️ Imprimir</button>
+      <button class="btn btn-dark" style="padding:8px 12px" id="btnHpPreview" onclick="imprimirHP()">🖨️ HP_PeB 600dpi</button>
+      <button class="btn btn-outline" style="padding:8px 12px" onclick="imprimirPDF()">📄 PDF</button>
       <button class="btn btn-outline" style="padding:8px 12px" onclick="window.scrollTo({top:0,behavior:'smooth'})">⬆️ Editar</button>
     </div>
 
@@ -682,9 +685,55 @@ function salvarRascunho(){
   if(btn) { btn.textContent="✓ Salvo!"; setTimeout(()=>btn.textContent=old,1400); }
   else alert('Rascunho salvo no navegador!');
 }
-function imprimir(){
+function imprimirPDF(){
   save();
   window.print();
+}
+function imprimir(){
+  // Botão legado "Imprimir/PDF" agora manda direto pra HP_PeB 600dpi (pedido do usuário)
+  return imprimirHP();
+}
+async function imprimirHP(){
+  save();
+  const btns = document.querySelectorAll('[onclick="imprimirHP()"]');
+  btns.forEach(b=>{b.disabled=true; b.dataset.old=b.innerHTML; b.innerHTML='⏳ Enviando...';});
+  try{
+    const styleEl = document.querySelector('style');
+    const styleContent = styleEl ? styleEl.innerHTML : '';
+    const paperEl = document.getElementById('paper');
+    if(!paperEl) throw new Error('Papel não encontrado');
+    const paperHTML = paperEl.outerHTML;
+    const fullHtml = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><style>${styleContent}
+      @page{size:A4;margin:10mm}
+      html,body{background:#fff;margin:0;padding:0}
+      .paper{box-shadow:none;margin:0 auto}
+    </style></head><body>${paperHTML}</body></html>`;
+    const endpoints = ['print.php','./print.php','termo/print.php','/termo/print.php'];
+    let lastErr=null, resp=null;
+    for(const url of endpoints){
+      try{
+        const r = await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({html:fullHtml,printer:'HP_PeB',dpi:600})});
+        const text = await r.text();
+        let j=null; try{ j=JSON.parse(text);}catch(e){ j=null; }
+        if(r.ok && j && j.ok){ resp=j; break; }
+        if(r.status===404) continue;
+        lastErr = (j && (j.error||j.output)) ? (j.error+(j.output?' | '+j.output:'')) : (j?JSON.stringify(j): text.slice(0,600));
+        if(r.status!==404) break;
+      }catch(e){ lastErr=e.message; }
+    }
+    if(!resp || !resp.ok) throw new Error(lastErr || 'Falha ao comunicar com print.php. Verifique se o arquivo foi enviado ao servidor.');
+    alert(`✅ Enviado para HP_PeB a 600dpi!\nJob: ${resp.job||'(ver fila CUPS)'}\n${resp.output||''}`);
+  }catch(err){
+    console.error(err);
+    const msg = '❌ Falha na impressão direta:\n'+err.message+'\n\nVerifique no servidor:\n  lpstat -p HP_PeB\n  sudo tail -n 30 /var/log/cups/error_log';
+    if(confirm(msg + '\n\nQuer abrir o diálogo PDF local como alternativa?')){
+      window.print();
+    } else {
+      alert(msg + '\n\nVocê ainda pode clicar em "PDF" para imprimir manualmente.');
+    }
+  }finally{
+    btns.forEach(b=>{b.disabled=false; if(b.dataset.old) b.innerHTML=b.dataset.old;});
+  }
 }
 
 // listeners - responsavel/data/local removidos (ficam em branco para caneta)
@@ -748,6 +797,8 @@ window.clearEquips = clearEquips;
 window.limparTudo = limparTudo;
 window.salvarRascunho = salvarRascunho;
 window.imprimir = imprimir;
+window.imprimirPDF = imprimirPDF;
+window.imprimirHP = imprimirHP;
 </script>
 </body>
 </html>
