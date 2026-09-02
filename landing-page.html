@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ramais & Termos - D.E. Jales</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    background: linear-gradient(135deg, #1e3a8a, #2563eb);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 40px 36px;
+    text-align: center;
+    max-width: 460px;
+    width: 100%;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, .25);
+  }
+  .card h1 { font-size: 2rem; color: #1e3a8a; margin-bottom: 6px; }
+  .card .subtitle { color: #6b7280; margin-bottom: 28px; font-size: 0.95rem; }
+  .botoes { display: flex; flex-direction: column; gap: 12px; }
+  .botao {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    text-decoration: none;
+    font-size: 1.05rem;
+    font-weight: 700;
+    padding: 14px 24px;
+    border-radius: 10px;
+    transition: all .2s;
+    border: 1px solid transparent;
+  }
+  .botao-primario {
+    background: #2563eb;
+    color: #fff;
+  }
+  .botao-primario:hover { background: #1e40af; transform: translateY(-1px); box-shadow: 0 6px 16px rgba(37,99,235,.35); }
+  .botao-secundario {
+    background: #fff;
+    color: #1e3a8a;
+    border-color: #dbeafe;
+  }
+  .botao-secundario:hover { background: #eff6ff; border-color: #93c5fd; transform: translateY(-1px); }
+  .divisor { display:flex; align-items:center; gap:12px; margin: 4px 0; color:#9ca3af; font-size: 12px; letter-spacing:.08em; text-transform:uppercase; }
+  .divisor::before, .divisor::after { content:""; flex:1; height:1px; background:#e5e7eb; }
+  .hint { margin-top:18px; font-size: 12px; color:#9ca3af; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1>📚 D.E. Jales</h1>
+    <p class="subtitle">Acesso rápido aos sistemas</p>
+    <div class="botoes">
+      <a class="botao botao-primario" href="http://10.180.152.31/ramal/index.php">📞 Acessar Ramais</a>
+      <div class="divisor">ou</div>
+      <a class="botao botao-secundario" href="http://10.180.152.31/termo/">📄 Gerar Termo de Retirada</a>
+    </div>
+    <p class="hint">Termo com busca de escolas • pronto para imprimir</p>
+  </div>
+</body>
+</html>
