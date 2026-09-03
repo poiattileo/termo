@@ -7,3 +7,17 @@ __pycache__/
 *.pyc
 ~$*
 *.tmp.doc
+
+# Painel admin - banco e fotos (não versionar conteúdo gerado)
+data/*.db
+data/*.sqlite
+data/*.db-wal
+data/*.db-shm
+storage/prints/*.png
+storage/prints/*.jpg
+storage/prints/*.jpeg
+storage/prints/*.webp
+storage/prints/*.pdf
+!storage/prints/.gitkeep
+!data/.gitkeep
+termo.zip

@@ -206,6 +206,7 @@
   details summary::-webkit-details-marker{display:none}
   details[open]{background:#f9fafb}
 </style>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js" defer></script>
 </head>
 <body>
 
@@ -221,6 +222,7 @@
     <button class="btn btn-ghost" onclick="window.scrollTo({top:0,behavior:'smooth'})">✎ Editar</button>
     <button class="btn btn-dark" id="btnHpTop" onclick="imprimirHP()">🖨️ Imprimir</button>
     <button class="btn btn-outline" style="background:#fff;color:#111827" onclick="imprimirPDF()" title="Impressão local / Salvar em PDF">📄 PDF</button>
+    <a class="btn btn-outline" style="background:rgba(255,255,255,.15);color:#fff;border-color:rgba(255,255,255,.3);text-decoration:none" href="admin/login.php" title="Painel administrativo">🔐 Admin</a>
   </div>
 </div>
 
@@ -687,8 +689,74 @@ function salvarRascunho(){
   if(btn) { btn.textContent="✓ Salvo!"; setTimeout(()=>btn.textContent=old,1400); }
   else alert('Rascunho salvo no navegador!');
 }
+/* === HISTÓRICO: registra impressão + foto para painel admin (60 dias) === */
+async function registrarHistorico(origem='impressao'){
+  try{
+    const escola = (inEscola && inEscola.value ? inEscola.value.trim() : '');
+    const equipsFiltered = equips.filter(s=>s.trim());
+    const styleEl = document.querySelector('style');
+    const styleContent = styleEl ? styleEl.innerHTML : '';
+    const paperEl = document.getElementById('paper');
+    const paperHTML = paperEl ? paperEl.outerHTML : '';
+    const fullHtml = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><style>${styleContent}
+      @page{size:A4;margin:10mm} html,body{background:#fff;margin:0;padding:0} .paper{box-shadow:none;margin:0 auto;min-height:277mm}
+    </style></head><body>${paperHTML}</body></html>`;
+    let fotoBase64 = null;
+    // tenta gerar foto via html2canvas se disponível
+    try{
+      if(window.html2canvas && paperEl){
+        const canvas = await html2canvas(paperEl, {scale:0.55, backgroundColor:'#ffffff', useCORS:true, logging:false});
+        fotoBase64 = canvas.toDataURL('image/png');
+        // limita tamanho: se > 1.2MB, recomprime jpeg
+        if(fotoBase64.length > 1200000){
+          fotoBase64 = canvas.toDataURL('image/jpeg', 0.72);
+        }
+      }
+    }catch(e){ /* ignora foto */ }
+    const payload = {
+      escola: escola,
+      equipamentos: equipsFiltered,
+      html: fullHtml,
+      foto_base64: fotoBase64,
+      origem: origem
+    };
+    const urls = ['api/prints.php?action=log','./api/prints.php?action=log','termo/api/prints.php?action=log','/termo/api/prints.php?action=log'];
+    for(const u of urls){
+      try{
+        const r = await fetch(u, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)});
+        if(r.ok){
+          const j = await r.json().catch(()=>null);
+          if(j && j.ok){
+            showToast('✓ Impressão salva no histórico (expira em 60 dias)', 'ok');
+            return j;
+          }
+        }
+        if(r.status===404) continue;
+        break;
+      }catch(e){ /* tenta próxima url */ }
+    }
+  }catch(e){ console.warn('historico falhou', e); }
+  return null;
+}
+function showToast(msg, type='ok'){
+  let el = document.getElementById('_toast');
+  if(!el){
+    el = document.createElement('div');
+    el.id = '_toast';
+    el.style.cssText = 'position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#0f172a;color:#fff;padding:10px 16px;border-radius:999px;font-size:13px;box-shadow:0 8px 24px rgba(0,0,0,.18);z-index:99;display:none;max-width:90vw;text-align:center';
+    document.body.appendChild(el);
+  }
+  el.textContent = msg;
+  el.style.background = type==='ok' ? '#0f3b8c' : '#7f1d1d';
+  el.style.display = 'block';
+  clearTimeout(el._t);
+  el._t = setTimeout(()=> el.style.display='none', 3200);
+}
+
 function imprimirPDF(){
   save();
+  // registra no histórico antes de abrir diálogo nativo (não bloqueia)
+  registrarHistorico('pdf_local');
   window.print();
 }
 function imprimir(){
@@ -697,6 +765,8 @@ function imprimir(){
 }
 async function imprimirHP(){
   save();
+  // salva no histórico (com foto) em paralelo, sem bloquear impressão
+  registrarHistorico('hp_600dpi');
   const btns = document.querySelectorAll('[onclick="imprimirHP()"]');
   btns.forEach(b=>{b.disabled=true; b.dataset.old=b.innerHTML; b.innerHTML='⏳ Enviando...';});
   try{
