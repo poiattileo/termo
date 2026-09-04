@@ -6,6 +6,14 @@ function get_pdo() {
     static $pdo = null;
     if ($pdo !== null) return $pdo;
 
+    // Mensagem amigável se extensão faltar — evita “could not find driver” obscuro
+    if (!extension_loaded('pdo_sqlite')) {
+        throw new RuntimeException('Falha ao abrir banco: could not find driver (extensão pdo_sqlite não instalada). No servidor rode: sudo apt update && sudo apt install -y php-sqlite3 php8.1-sqlite3 php8.2-sqlite3 && sudo systemctl restart apache2');
+    }
+    if (!in_array('sqlite', PDO::getAvailableDrivers(), true)) {
+        throw new RuntimeException('Falha ao abrir banco: driver sqlite não disponível em PDO::getAvailableDrivers(). Instale php-sqlite3 e reinicie o Apache/PHP-FPM.');
+    }
+
     $needInit = !file_exists(DB_FILE);
     try {
         $pdo = new PDO('sqlite:' . DB_FILE);
@@ -14,10 +22,8 @@ function get_pdo() {
         // timeout para concorrência
         $pdo->exec('PRAGMA journal_mode=WAL; PRAGMA busy_timeout=5000; PRAGMA foreign_keys=ON;');
     } catch (Exception $e) {
-        http_response_code(500);
-        header('Content-Type: application/json; charset=utf-8');
-        echo json_encode(['ok'=>false,'error'=>'Falha ao abrir banco: '.$e->getMessage()]);
-        exit;
+        // Não faz exit aqui — deixa quem chamou decidir (print.php precisa continuar imprimindo mesmo sem DB)
+        throw new RuntimeException('Falha ao abrir banco: '.$e->getMessage(), 0, $e);
     }
 
     if ($needInit) {

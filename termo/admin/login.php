@@ -3,7 +3,13 @@ require_once __DIR__ . '/../api/config.php';
 require_once __DIR__ . '/../api/db.php';
 // se já logado, vai para dashboard
 if (is_logged_in()) { header('Location: index.php'); exit; }
-$pdo = get_pdo();
+try {
+    $pdo = get_pdo();
+} catch (Throwable $e) {
+    http_response_code(500);
+    echo '<h1>Erro de banco</h1><p>'.htmlspecialchars($e->getMessage()).'</p><p>No servidor: <code>sudo apt install -y php-sqlite3 && sudo systemctl restart apache2</code></p>';
+    exit;
+}
 // verifica se existe usuário, se não, mostra aviso
 $hasUser = $pdo->query("SELECT COUNT(*) FROM users")->fetchColumn() > 0;
 ?>

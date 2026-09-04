@@ -8,7 +8,15 @@ require_once __DIR__ . '/api/db.php';
 
 header('Content-Type: text/html; charset=utf-8');
 
-$pdo = get_pdo();
+try {
+    $pdo = get_pdo();
+} catch (Throwable $e) {
+    http_response_code(500);
+    $hint = htmlspecialchars($e->getMessage());
+    $drivers = htmlspecialchars(implode(', ', PDO::getAvailableDrivers()));
+    echo "<!DOCTYPE html><html><head><meta charset='utf-8'><title>Erro DB</title><style>body{font-family:system-ui;padding:24px;background:#fef2f2} .card{max-width:780px;margin:auto;background:#fff;border:1px solid #fecaca;border-radius:12px;padding:20px}</style></head><body><div class='card'><h1 style='color:#991b1b'>❌ Erro de banco</h1><p><b>$hint</b></p><p>Drivers PDO disponíveis: <code>$drivers</code></p><p>Solução no servidor:</p><pre>sudo apt update && sudo apt install -y php-sqlite3 php8.1-sqlite3 php8.2-sqlite3\nsudo phpenmod pdo_sqlite\nsudo systemctl restart apache2  # ou nginx + php-fpm</pre><p>Depois recarregue esta página.</p><p><a href='install.php'>↻ Tentar novamente</a></p></div></body></html>";
+    exit;
+}
 $msg = [];
 $msg[] = "✔ Banco SQLite inicializado em: " . DB_FILE;
 $msg[] = "   Tamanho: " . (file_exists(DB_FILE) ? round(filesize(DB_FILE)/1024,1)." KB" : "—");

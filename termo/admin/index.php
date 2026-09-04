@@ -2,14 +2,24 @@
 require_once __DIR__ . '/../api/config.php';
 require_once __DIR__ . '/../api/db.php';
 require_login_redirect();
-$pdo = get_pdo();
+try {
+    $pdo = get_pdo();
+} catch (Throwable $e) {
+    http_response_code(500);
+    echo '<h1>Erro de banco</h1><p>'.htmlspecialchars($e->getMessage()).'</p><p>No servidor: <code>sudo apt install -y php-sqlite3 && sudo systemctl restart apache2</code></p><p><a href="../install.php">Tentar install.php</a></p>';
+    exit;
+}
 // pega stats iniciais server-side para primeiro paint
 try { $cleanupPreview = cleanup_expired($pdo); } catch(Exception $e) {$cleanupPreview=['rows'=>0,'files'=>0];}
 $user = current_admin_user();
 $uid = current_admin_id();
-$totalUsers = $pdo->query("SELECT COUNT(*) FROM users")->fetchColumn();
-$totalPrints = $pdo->query("SELECT COUNT(*) FROM prints")->fetchColumn();
-$hoje = $pdo->query("SELECT COUNT(*) FROM prints WHERE date(created_at)=date('now')")->fetchColumn();
+try {
+    $totalUsers = $pdo->query("SELECT COUNT(*) FROM users")->fetchColumn();
+    $totalPrints = $pdo->query("SELECT COUNT(*) FROM prints")->fetchColumn();
+    $hoje = $pdo->query("SELECT COUNT(*) FROM prints WHERE date(created_at)=date('now')")->fetchColumn();
+} catch (Throwable $e) {
+    $totalUsers = $totalPrints = $hoje = 0;
+}
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">

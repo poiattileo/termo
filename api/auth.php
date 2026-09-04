@@ -18,7 +18,13 @@ if (empty($action)) {
     if (is_array($j) && !empty($j['action'])) $action = $j['action'];
 }
 
-$pdo = get_pdo();
+try {
+    $pdo = get_pdo();
+} catch (Throwable $e) {
+    http_response_code(500);
+    echo json_encode(['ok'=>false,'error'=>$e->getMessage(),'hint'=>'No servidor: sudo apt install -y php-sqlite3 && sudo systemctl restart apache2'], JSON_UNESCAPED_UNICODE);
+    exit;
+}
 
 if ($action === 'login') {
     // aceita JSON ou form

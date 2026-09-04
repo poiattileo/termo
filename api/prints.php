@@ -10,7 +10,14 @@ header('Access-Control-Allow-Headers: Content-Type');
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(204); exit; }
 
-$pdo = get_pdo();
+try {
+    $pdo = get_pdo();
+} catch (Throwable $e) {
+    http_response_code(500);
+    // Mensagem já vem amigável de get_pdo()
+    echo json_encode(['ok'=>false,'error'=>$e->getMessage(),'hint'=>'No servidor: sudo apt install -y php-sqlite3 && sudo systemctl restart apache2'], JSON_UNESCAPED_UNICODE);
+    exit;
+}
 $method = $_SERVER['REQUEST_METHOD'];
 $action = $_GET['action'] ?? '';
 if (empty($action)) {

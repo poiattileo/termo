@@ -11,7 +11,15 @@ header('Content-Type: application/json; charset=utf-8');
 // permite também execução via CLI
 $isCli = php_sapi_name() === 'cli';
 
-$pdo = get_pdo();
+try {
+    $pdo = get_pdo();
+} catch (Throwable $e) {
+    $msg = $e->getMessage();
+    if ($isCli) { fwrite(STDERR, "ERRO: $msg\n"); exit(1); }
+    http_response_code(500);
+    echo json_encode(['ok'=>false,'error'=>$msg,'hint'=>'No servidor: sudo apt install -y php-sqlite3 && sudo systemctl restart apache2'], JSON_UNESCAPED_UNICODE);
+    exit;
+}
 $res = cleanup_expired($pdo);
 
 $out = ['ok'=>true,'retention_days'=>RETENTION_DAYS,'removed_rows'=>$res['rows'],'removed_files'=>$res['files'],'cutoff'=>$res['cutoff'],'at'=>date('Y-m-d H:i:s')];
